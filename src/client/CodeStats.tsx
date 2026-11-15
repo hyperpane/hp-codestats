@@ -63,7 +63,7 @@ export function CodeStats() {
     host.win.setTitle(name ? `Code Stats · ${name}` : 'Code Stats');
   }, [host, name]);
 
-  if (!project) return <NodeMessage>Open a project to count its code.</NodeMessage>;
+  if (!project) return <NodeMessage>Open a project to count its code</NodeMessage>;
 
   const folder = project.folder ?? null;
   const shownPath = stats?.root ?? at ?? folder ?? '';
@@ -90,7 +90,7 @@ export function CodeStats() {
       {error ? (
         <NodeMessage error>{error}</NodeMessage>
       ) : !stats ? (
-        <NodeMessage>Counting…</NodeMessage>
+        <NodeMessage>Counting</NodeMessage>
       ) : (
         <Body stats={stats} view={view} setView={setView} open={(p) => host.app.openFile(join(stats, p))} stale={!!progress} />
       )}
@@ -107,7 +107,7 @@ function join(s: Stats, rel: string) {
 
 function Progress({ done, total }: { done: number; total: number }) {
   return (
-    <div className="h-0.5 overflow-hidden bg-[var(--node-border)]" title={total ? `${number(done)} of ${number(total)} files` : 'Listing the files…'}>
+    <div className="h-0.5 overflow-hidden bg-[var(--node-border)]" title={total ? `${number(done)} of ${number(total)} files` : 'Listing the files'}>
       <div className={cn('h-full bg-[var(--node-accent)] transition-[width] duration-150', !total && 'w-1/4 animate-pulse')} style={total ? { width: `${(done / total) * 100}%` } : undefined} />
     </div>
   );
@@ -119,7 +119,7 @@ function Body({ stats, view, setView, open, stale }: { stats: Stats; view: View;
   if (!t.files) {
     return (
       <div className="flex flex-1 flex-col">
-        <NodeMessage>{stats.file ? 'This file is in no language it knows, or isn’t text.' : 'No code here: no file in a language it knows.'}</NodeMessage>
+        <NodeMessage>{stats.file ? 'This file is in no language it knows, or isn’t text' : 'No code here: no file in a language it knows'}</NodeMessage>
         <Footer stats={stats} />
       </div>
     );
