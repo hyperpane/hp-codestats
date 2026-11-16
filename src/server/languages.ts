@@ -20,7 +20,14 @@ const SQL: Syntax = { line: ['--'], block: [['/*', '*/']], quotes: ['"', "'"] };
 const CSS: Syntax = { block: [['/*', '*/']], quotes: ['"', "'"] };
 const SCSS: Syntax = { line: ['//'], block: [['/*', '*/']], quotes: ['"', "'"] };
 const MARKUP: Syntax = { block: [['<!--', '-->']] };
-const COMPONENT: Syntax = { line: ['//'], block: [['<!--', '-->'], ['/*', '*/']], quotes: ['"', "'", '`'] };
+const COMPONENT: Syntax = {
+  line: ['//'],
+  block: [
+    ['<!--', '-->'],
+    ['/*', '*/'],
+  ],
+  quotes: ['"', "'", '`'],
+};
 const DATA: Syntax = { quotes: ['"'] };
 const TEXT: Syntax = {};
 const LISP: Syntax = { line: [';'], quotes: ['"'] };
@@ -108,18 +115,83 @@ const TABLE: [string, string, Syntax, string[], string[]?][] = [
   ['TeX', '#3d6117', { line: ['%'] }, ['tex', 'sty', 'cls', 'bib']],
   ['Plain Text', '#8b949e', TEXT, ['txt', 'text'], ['LICENSE', 'LICENCE', 'NOTICE', 'AUTHORS', 'CHANGELOG', 'COPYING']],
   ['Git config', '#f44d27', HASH, [], ['.gitignore', '.gitattributes', '.gitmodules', '.dockerignore', '.npmignore', '.prettierignore', '.eslintignore']],
-  ['Handlebars', '#f7931e', { block: [['{{!--', '--}}'], ['{{!', '}}'], ['<!--', '-->']] }, ['hbs', 'handlebars', 'mustache']],
-  ['Jinja', '#a52a22', { block: [['{#', '#}'], ['<!--', '-->']] }, ['jinja', 'jinja2', 'j2', 'njk']],
-  ['Twig', '#c1d026', { block: [['{#', '#}'], ['<!--', '-->']] }, ['twig']],
-  ['Razor', '#512be4', { block: [['@*', '*@'], ['<!--', '-->']] }, ['cshtml', 'razor']],
+  [
+    'Handlebars',
+    '#f7931e',
+    {
+      block: [
+        ['{{!--', '--}}'],
+        ['{{!', '}}'],
+        ['<!--', '-->'],
+      ],
+    },
+    ['hbs', 'handlebars', 'mustache'],
+  ],
+  [
+    'Jinja',
+    '#a52a22',
+    {
+      block: [
+        ['{#', '#}'],
+        ['<!--', '-->'],
+      ],
+    },
+    ['jinja', 'jinja2', 'j2', 'njk'],
+  ],
+  [
+    'Twig',
+    '#c1d026',
+    {
+      block: [
+        ['{#', '#}'],
+        ['<!--', '-->'],
+      ],
+    },
+    ['twig'],
+  ],
+  [
+    'Razor',
+    '#512be4',
+    {
+      block: [
+        ['@*', '*@'],
+        ['<!--', '-->'],
+      ],
+    },
+    ['cshtml', 'razor'],
+  ],
   ['Pug', '#a86454', { line: ['//-', '//'] }, ['pug', 'jade']],
   ['Haml', '#ece2a9', { line: ['-#', '/'] }, ['haml']],
   ['Smali', '#a0a0a0', { line: ['#'], quotes: ['"'] }, ['smali']],
   ['Gherkin', '#5b2063', { line: ['#'] }, ['feature']],
   ['Vim script', '#199f4b', { line: ['"'] }, ['vim'], ['.vimrc']],
   ['Awk', '#c30e9b', HASH, ['awk']],
-  ['D', '#ba595e', { line: ['//'], block: [['/*', '*/'], ['/+', '+/']], quotes: ['"', '`'] }, ['d']],
-  ['Pascal', '#e3f171', { line: ['//'], block: [['{', '}'], ['(*', '*)']], quotes: ["'"] }, ['pas', 'pp', 'dpr', 'lpr']],
+  [
+    'D',
+    '#ba595e',
+    {
+      line: ['//'],
+      block: [
+        ['/*', '*/'],
+        ['/+', '+/'],
+      ],
+      quotes: ['"', '`'],
+    },
+    ['d'],
+  ],
+  [
+    'Pascal',
+    '#e3f171',
+    {
+      line: ['//'],
+      block: [
+        ['{', '}'],
+        ['(*', '*)'],
+      ],
+      quotes: ["'"],
+    },
+    ['pas', 'pp', 'dpr', 'lpr'],
+  ],
   ['Ada', '#02f88c', { line: ['--'], quotes: ['"'] }, ['ada', 'adb', 'ads']],
   ['COBOL', '#005ca5', { line: ['*>'], quotes: ['"', "'"] }, ['cob', 'cbl', 'cpy']],
   ['Hare', '#9d7424', { line: ['//'], quotes: ['"'] }, ['ha']],
@@ -140,8 +212,6 @@ for (const [name, color, syntax, exts, files] of TABLE) {
   for (const e of exts) BY_EXT.set(e, lang);
   for (const f of files ?? []) BY_FILE.set(f, lang);
 }
-
-export const languageNamed = (name: string) => BY_NAME.get(name);
 
 /** A file's extension, lowercase ('' for none, and for `.gitignore`). */
 export function extensionOf(name: string): string {

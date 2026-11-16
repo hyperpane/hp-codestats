@@ -59,7 +59,12 @@ export function Table({ rows, total, nameLabel, noFiles }: { rows: Row[]; total:
       type="button"
       title={title}
       onClick={() => setSort((s) => ({ by: id, up: s.by === id ? !s.up : id === 'name' }))}
-      className={cn('flex h-6 items-center gap-0.5 uppercase hover:text-[var(--node-fg)]', end && 'justify-end', sort.by === id && 'text-[var(--node-fg)]', styles.focusRing)}
+      className={cn(
+        'flex h-6 items-center gap-0.5 uppercase hover:text-[var(--node-fg)]',
+        end && 'justify-end',
+        sort.by === id && 'text-[var(--node-fg)]',
+        styles.focusRing,
+      )}
     >
       {label}
       {sort.by === id && (sort.up ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />)}
@@ -68,7 +73,13 @@ export function Table({ rows, total, nameLabel, noFiles }: { rows: Row[]; total:
 
   return (
     <div className="min-w-[38rem]">
-      <div className={cn(GRID, styles.stickyTop, 'border-b border-[var(--node-border)] bg-[var(--node-bg)] text-[10.5px] font-medium tracking-wide text-[var(--node-muted)]')}>
+      <div
+        className={cn(
+          GRID,
+          styles.stickyTop,
+          'border-b border-[var(--node-border)] bg-[var(--node-bg)] text-[10.5px] font-medium tracking-wide text-[var(--node-muted)]',
+        )}
+      >
         {head('name', nameLabel, undefined, false)}
         {COLUMNS.map((c) => (c.id === 'files' && noFiles ? <span key={c.id} /> : <span key={c.id}>{head(c.id, c.label, c.title)}</span>))}
         {head('code', 'Share', 'Share of the code')}
@@ -99,14 +110,24 @@ export function Table({ rows, total, nameLabel, noFiles }: { rows: Row[]; total:
               c.id === 'files' && noFiles ? (
                 <span key={c.id} />
               ) : (
-                <span key={c.id} className={cn('text-right tabular-nums', c.id === sort.by ? 'text-[var(--node-fg)]' : 'text-[var(--node-muted)]', c.id === 'code' && 'text-[var(--node-fg)]')}>
+                <span
+                  key={c.id}
+                  className={cn(
+                    'text-right tabular-nums',
+                    c.id === sort.by ? 'text-[var(--node-fg)]' : 'text-[var(--node-muted)]',
+                    c.id === 'code' && 'text-[var(--node-fg)]',
+                  )}
+                >
                   {c.show ? c.show(r) : number(c.value(r))}
                 </span>
               ),
             )}
             <span className="flex items-center gap-1.5">
               <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--node-border)]">
-                <span className="block h-full rounded-full" style={{ width: `${Math.max(share * 100, share > 0 ? 2 : 0)}%`, background: r.color ?? 'var(--node-accent)' }} />
+                <span
+                  className="block h-full rounded-full"
+                  style={{ width: `${Math.max(share * 100, share > 0 ? 2 : 0)}%`, background: r.color ?? 'var(--node-accent)' }}
+                />
               </span>
               <span className="w-10 text-right text-[var(--node-muted)] tabular-nums">{percent(share)}</span>
             </span>

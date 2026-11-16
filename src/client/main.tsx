@@ -6,5 +6,9 @@ import { NodeMessage } from '@hyperpane/ui';
 import { CodeStats } from './CodeStats.tsx';
 
 mount((host) =>
-  host.view.type === 'node' && host.view.kind === 'codestats' ? <CodeStats /> : <NodeMessage error>Code Stats has no “{host.view.type}” view here.</NodeMessage>,
+  host.view.type === 'node' && host.view.kind === 'codestats' ? (
+    <CodeStats />
+  ) : (
+    <NodeMessage error>Code Stats has no “{host.view.type}” view here.</NodeMessage>
+  ),
 );

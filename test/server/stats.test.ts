@@ -99,7 +99,10 @@ test('a folder in the project, a full path, a single file', async () => {
   assert.equal(src.root, path.join(p.dir, 'src'));
   assert.equal(src.totals.files, 2);
   const full = await p.count(path.join(p.dir, 'bin'));
-  assert.deepEqual(full.languages.map((l) => l.name), ['Shell']);
+  assert.deepEqual(
+    full.languages.map((l) => l.name),
+    ['Shell'],
+  );
   const one = await p.count('src/a.ts');
   assert.equal(one.file, true);
   assert.deepEqual([one.totals.files, one.largest[0].path], [1, 'a.ts']);

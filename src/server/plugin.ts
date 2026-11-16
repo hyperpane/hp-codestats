@@ -13,7 +13,8 @@ export function where(host: Host, project: unknown, at: unknown): string {
   const folder = typeof project === 'string' && project ? host.projectFolder(project) : null;
   const p = typeof at === 'string' ? at.trim() : '';
   if (p && path.isAbsolute(p)) return path.normalize(p);
-  if (!folder) throw new PluginError(p ? `${p} isn’t a full path, and this project’s folder is on another server.` : 'This project’s folder is on another server.');
+  if (!folder)
+    throw new PluginError(p ? `${p} isn’t a full path, and this project’s folder is on another server.` : 'This project’s folder is on another server.');
   return p ? path.resolve(folder, p) : folder;
 }
 

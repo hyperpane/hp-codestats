@@ -54,7 +54,15 @@ export function CodeStats() {
           host.ports.emit('stats', statsOut(e.stats));
         }
       },
-      { resume: false, onEnd: (e) => (e ? (setError(e), setProgress(null)) : undefined) },
+      {
+        resume: false,
+        onEnd: (e) => {
+          if (e) {
+            setError(e);
+            setProgress(null);
+          }
+        },
+      },
     );
   }, [host, project?.id, at, again]);
 
@@ -69,17 +77,34 @@ export function CodeStats() {
   const shownPath = stats?.root ?? at ?? folder ?? '';
   const inProject = folder && shownPath.startsWith(folder) ? shownPath.slice(folder.length).replace(/^[\\/]/, '') : null;
   const pick = async () => {
-    const value = await host.ui.prompt({ title: 'Count', label: 'A folder or a file: a full path, or one from the project’s folder. Empty: the project’s folder.', value: at, placeholder: folder ?? '' });
+    const value = await host.ui.prompt({
+      title: 'Count',
+      label: 'A folder or a file: a full path, or one from the project’s folder. Empty: the project’s folder.',
+      value: at,
+      placeholder: folder ?? '',
+    });
     if (value !== null) host.win.setData('path', value.trim() || null);
   };
 
   return (
     <div className="flex h-full flex-col text-xs text-[var(--node-fg)]">
       <div className="flex items-center gap-1 border-b border-[var(--node-border)] px-2 py-1">
-        <button type="button" onClick={() => void pick()} title={`${shownPath}\nClick to count another folder`} className="group flex h-6 min-w-0 flex-1 items-center gap-1.5 rounded-[5px] px-1 text-left hover:bg-[var(--node-hover)]">
+        <button
+          type="button"
+          onClick={() => void pick()}
+          title={`${shownPath}\nClick to count another folder`}
+          className="group flex h-6 min-w-0 flex-1 items-center gap-1.5 rounded-[5px] px-1 text-left hover:bg-[var(--node-hover)]"
+        >
           <FolderOpen className="size-3.5 flex-none text-[var(--node-muted)]" />
           <span className="min-w-0 truncate font-mono">
-            {inProject === null ? shownPath : <><span className="text-[var(--node-muted)]">{project.name}</span>{inProject && <span>/{inProject}</span>}</>}
+            {inProject === null ? (
+              shownPath
+            ) : (
+              <>
+                <span className="text-[var(--node-muted)]">{project.name}</span>
+                {inProject && <span>/{inProject}</span>}
+              </>
+            )}
           </span>
           <Pencil className="size-3 flex-none text-[var(--node-muted)] opacity-0 group-hover:opacity-100" />
         </button>
@@ -108,7 +133,10 @@ function join(s: Stats, rel: string) {
 function Progress({ done, total }: { done: number; total: number }) {
   return (
     <div className="h-0.5 overflow-hidden bg-[var(--node-border)]" title={total ? `${number(done)} of ${number(total)} files` : 'Listing the files'}>
-      <div className={cn('h-full bg-[var(--node-accent)] transition-[width] duration-150', !total && 'w-1/4 animate-pulse')} style={total ? { width: `${(done / total) * 100}%` } : undefined} />
+      <div
+        className={cn('h-full bg-[var(--node-accent)] transition-[width] duration-150', !total && 'w-1/4 animate-pulse')}
+        style={total ? { width: `${(done / total) * 100}%` } : undefined}
+      />
     </div>
   );
 }
@@ -134,7 +162,9 @@ function Body({ stats, view, setView, open, stale }: { stats: Stats; view: View;
             key: f.name || '.',
             name: f.name ? <span className="font-mono">{f.name}/</span> : <span className="text-[var(--node-muted)] italic">Files right here</span>,
             sortName: f.name,
-            parts: f.code ? f.languages.map((l) => ({ color: colors.get(l.name) ?? 'var(--node-muted)', share: l.code / f.code, title: `${l.name}: ${number(l.code)}` })) : [],
+            parts: f.code
+              ? f.languages.map((l) => ({ color: colors.get(l.name) ?? 'var(--node-muted)', share: l.code / f.code, title: `${l.name}: ${number(l.code)}` }))
+              : [],
             title: f.languages
               .slice(0, 6)
               .map((l) => `${l.name} ${percent(f.code ? l.code / f.code : 0)}`)
@@ -178,7 +208,13 @@ function Body({ stats, view, setView, open, stale }: { stats: Stats; view: View;
         ))}
       </div>
       <div className="min-h-0 flex-1 overflow-auto [scrollbar-gutter:stable]">
-        <Table key={view} rows={rows} total={t.code} nameLabel={view === 'languages' ? 'Language' : view === 'folders' ? 'Folder' : 'File'} noFiles={view === 'files'} />
+        <Table
+          key={view}
+          rows={rows}
+          total={t.code}
+          nameLabel={view === 'languages' ? 'Language' : view === 'folders' ? 'Folder' : 'File'}
+          noFiles={view === 'files'}
+        />
       </div>
       <Footer stats={stats} />
     </div>
@@ -207,7 +243,11 @@ function Languages({ stats }: { stats: Stats }) {
     <div className="flex flex-col gap-1.5 border-b border-[var(--node-border)] px-2.5 py-2">
       <div className="flex h-2 gap-px overflow-hidden rounded-full bg-[var(--node-border)]">
         {stats.languages.map((l) => (
-          <span key={l.name} title={`${l.name}: ${number(l.code)} lines of code (${percent(l.code / total)})`} style={{ width: `${(l.code / total) * 100}%`, background: l.color }} />
+          <span
+            key={l.name}
+            title={`${l.name}: ${number(l.code)} lines of code (${percent(l.code / total)})`}
+            style={{ width: `${(l.code / total) * 100}%`, background: l.color }}
+          />
         ))}
       </div>
       <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[var(--node-muted)]">
@@ -235,9 +275,12 @@ function Footer({ stats }: { stats: Stats }) {
   return (
     <div className="flex flex-wrap gap-x-1 border-t border-[var(--node-border)] px-2.5 py-1.5 text-[var(--node-muted)]">
       <span>
-        {stats.git ? 'The files git has and doesn’t ignore' : stats.file ? 'One file' : 'Every file but in node_modules, build output and the like'}, counted in {duration(stats.took)}.
+        {stats.git ? 'The files git has and doesn’t ignore' : stats.file ? 'One file' : 'Every file but in node_modules, build output and the like'}, counted in{' '}
+        {duration(stats.took)}.
       </span>
-      {stats.truncated && <span className="text-[var(--ansi-3)]">It stopped at {number(stats.totals.files + s.binary + s.large + s.generated + s.other)} files.</span>}
+      {stats.truncated && (
+        <span className="text-[var(--ansi-3)]">It stopped at {number(stats.totals.files + s.binary + s.large + s.generated + s.other)} files.</span>
+      )}
       {not.length > 0 && <span>Not counted: {not.join(', ')}.</span>}
     </div>
   );

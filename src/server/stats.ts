@@ -143,12 +143,18 @@ export async function count(host: Host, root: string, o: Limits & { signal?: Abo
   const record = (rel: string, lang: Language, c: { lines: number; code: number; comments: number; blanks: number; bytes: number }) => {
     add(totals, c);
     let l = languages.get(lang.name);
-    if (!l) languages.set(lang.name, (l = { name: lang.name, color: lang.color, ...zero() }));
+    if (!l) {
+      l = { name: lang.name, color: lang.color, ...zero() };
+      languages.set(lang.name, l);
+    }
     add(l, c);
     const slash = rel.indexOf('/');
     const top = file || slash < 0 ? '' : rel.slice(0, slash);
     let f = folders.get(top);
-    if (!f) folders.set(top, (f = { name: top, languages: [], byLanguage: new Map(), ...zero() }));
+    if (!f) {
+      f = { name: top, languages: [], byLanguage: new Map(), ...zero() };
+      folders.set(top, f);
+    }
     add(f, c);
     f.byLanguage.set(lang.name, (f.byLanguage.get(lang.name) ?? 0) + c.code);
     files.push({ path: rel, language: lang.name, ...c });
