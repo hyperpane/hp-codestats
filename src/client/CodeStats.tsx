@@ -93,7 +93,7 @@ export function CodeStats() {
           type="button"
           onClick={() => void pick()}
           title={`${shownPath}\nClick to count another folder`}
-          className="group flex h-6 min-w-0 flex-1 items-center gap-1.5 rounded-[5px] px-1 text-left hover:bg-[var(--node-hover)]"
+          className="group flex h-6 min-w-0 flex-1 items-center gap-1.5 rounded-[5px] px-1 text-left hover:bg-[var(--node-hover)] touch:h-9"
         >
           <FolderOpen className="size-3.5 flex-none text-[var(--node-muted)]" />
           <span className="min-w-0 truncate font-mono">
@@ -106,7 +106,7 @@ export function CodeStats() {
               </>
             )}
           </span>
-          <Pencil className="size-3 flex-none text-[var(--node-muted)] opacity-0 group-hover:opacity-100" />
+          <Pencil className="size-3 flex-none text-[var(--node-muted)] opacity-0 group-hover:opacity-100 touch:opacity-100" />
         </button>
         {at && <ToolButton label="Count the project’s folder" icon={FolderRoot} onClick={() => host.win.setData('path', null)} />}
         <ToolButton label="Count again" icon={RefreshCw} disabled={!!progress} onClick={() => setAgain((n) => n + 1)} />
@@ -182,12 +182,13 @@ function Body({ stats, view, setView, open, stale }: { stats: Stats; view: View;
 
   return (
     <div className={cn('flex min-h-0 flex-1 flex-col transition-opacity', stale && 'opacity-60')}>
-      <div className="grid grid-cols-5 gap-px border-b border-[var(--node-border)] bg-[var(--node-border)]">
-        <Figure label="Files" value={t.files} />
-        <Figure label="Lines" value={t.lines} detail={formatSize(t.bytes)} />
-        <Figure label="Code" value={t.code} detail={percent(t.code / t.lines)} strong />
-        <Figure label="Comments" value={t.comments} detail={percent(t.comments / t.lines)} />
-        <Figure label="Blank" value={t.blanks} detail={percent(t.blanks / t.lines)} />
+      {/* Narrow: files and lines on a line, the three kinds of line under them. */}
+      <div className="grid grid-cols-5 gap-px border-b border-[var(--node-border)] bg-[var(--node-border)] max-sm:grid-cols-6">
+        <Figure label="Files" value={t.files} className="max-sm:col-span-3" />
+        <Figure label="Lines" value={t.lines} detail={formatSize(t.bytes)} className="max-sm:col-span-3" />
+        <Figure label="Code" value={t.code} detail={percent(t.code / t.lines)} strong className="max-sm:col-span-2" />
+        <Figure label="Comments" value={t.comments} detail={percent(t.comments / t.lines)} className="max-sm:col-span-2" />
+        <Figure label="Blank" value={t.blanks} detail={percent(t.blanks / t.lines)} className="max-sm:col-span-2" />
       </div>
       <Languages stats={stats} />
       <div className="flex items-center gap-1 border-b border-[var(--node-border)] px-2 py-1">
@@ -199,7 +200,7 @@ function Body({ stats, view, setView, open, stale }: { stats: Stats; view: View;
             disabled={stats.file && v !== 'languages'}
             onClick={() => setView(v)}
             className={cn(
-              'h-6 rounded-[5px] px-2 font-medium disabled:opacity-40',
+              'h-6 rounded-[5px] px-2 font-medium disabled:opacity-40 touch:h-9',
               view === v ? 'bg-[var(--node-hover)] text-[var(--node-fg)]' : 'text-[var(--node-muted)] enabled:hover:text-[var(--node-fg)]',
             )}
           >
@@ -221,9 +222,9 @@ function Body({ stats, view, setView, open, stale }: { stats: Stats; view: View;
   );
 }
 
-function Figure({ label, value, detail, strong }: { label: string; value: number; detail?: string; strong?: boolean }) {
+function Figure({ label, value, detail, strong, className }: { label: string; value: number; detail?: string; strong?: boolean; className?: string }) {
   return (
-    <div className="flex min-w-0 flex-col gap-0.5 bg-[var(--node-bg)] px-2.5 py-2" title={`${number(value)} ${label.toLowerCase()}`}>
+    <div className={cn('flex min-w-0 flex-col gap-0.5 bg-[var(--node-bg)] px-2.5 py-2', className)} title={`${number(value)} ${label.toLowerCase()}`}>
       <span className="text-[10.5px] font-medium tracking-wide text-[var(--node-muted)] uppercase">{label}</span>
       <span className="flex items-baseline gap-1.5">
         <span className={cn('truncate text-base tabular-nums', strong ? 'font-semibold' : 'font-medium')}>{compact(value)}</span>

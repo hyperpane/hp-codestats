@@ -1,10 +1,10 @@
 // A table of counts: a name and its numbers, sorted by a column (click its
 // head; again for the other way), with each row's share of the code drawn
-// as a bar.
+// as a bar. A narrow window keeps the name, the code and the share.
 
 import { useState } from 'react';
 import { ArrowDown, ArrowUp } from 'lucide-react';
-import { cn, styles } from '@hyperpane/ui';
+import { cn, styles, useTouch } from '@hyperpane/ui';
 import { formatSize } from '@hyperpane/sdk/client';
 import { number, percent } from './format.ts';
 
@@ -36,7 +36,10 @@ export interface Row {
   onOpen?(): void;
 }
 
-const GRID = 'grid grid-cols-[minmax(8rem,1fr)_repeat(6,minmax(3.5rem,auto))_6.5rem] items-center gap-x-3 px-2';
+const GRID =
+  'grid grid-cols-[minmax(8rem,1fr)_repeat(6,minmax(3.5rem,auto))_6.5rem] items-center gap-x-3 px-2 max-sm:grid-cols-[minmax(0,1fr)_minmax(3.5rem,auto)_6.5rem]';
+/** A column a narrow window does without. */
+const WIDE_ONLY = (id: string) => id !== 'code' && 'max-sm:hidden';
 
 const COLUMNS: Column<Row>[] = [
   { id: 'files', label: 'Files', value: (r) => r.files ?? 0 },
@@ -49,6 +52,7 @@ const COLUMNS: Column<Row>[] = [
 
 export function Table({ rows, total, nameLabel, noFiles }: { rows: Row[]; total: number; nameLabel: string; noFiles?: boolean }) {
   const [sort, setSort] = useState<{ by: string; up: boolean }>({ by: 'code', up: false });
+  const touch = useTouch();
   const col = COLUMNS.find((c) => c.id === sort.by);
   const sorted = [...rows].sort((a, b) => {
     const d = col ? col.value(a) - col.value(b) : a.sortName.localeCompare(b.sortName);
@@ -72,7 +76,7 @@ export function Table({ rows, total, nameLabel, noFiles }: { rows: Row[]; total:
   );
 
   return (
-    <div className="min-w-[38rem]">
+    <div className="sm:min-w-[38rem]">
       <div
         className={cn(
           GRID,
@@ -81,17 +85,32 @@ export function Table({ rows, total, nameLabel, noFiles }: { rows: Row[]; total:
         )}
       >
         {head('name', nameLabel, undefined, false)}
-        {COLUMNS.map((c) => (c.id === 'files' && noFiles ? <span key={c.id} /> : <span key={c.id}>{head(c.id, c.label, c.title)}</span>))}
+        {COLUMNS.map((c) =>
+          c.id === 'files' && noFiles ? (
+            <span key={c.id} className="max-sm:hidden" />
+          ) : (
+            <span key={c.id} className={cn(WIDE_ONLY(c.id))}>
+              {head(c.id, c.label, c.title)}
+            </span>
+          ),
+        )}
         {head('code', 'Share', 'Share of the code')}
       </div>
       {sorted.map((r) => {
         const share = total ? r.code / total : 0;
         return (
+          // biome-ignore lint/a11y/useKeyWithClickEvents: a finger's tap opens the file, as a double-click does; the mouse's click does nothing.
           <div
             key={r.key}
             title={r.title}
             onDoubleClick={r.onOpen}
-            className={cn(GRID, 'min-h-7 border-b border-[var(--node-border)]/60 py-1 hover:bg-[var(--node-hover)]', r.onOpen && 'cursor-default')}
+            // A tap opens it, with a finger.
+            onClick={touch ? r.onOpen : undefined}
+            className={cn(
+              GRID,
+              'min-h-7 border-b border-[var(--node-border)]/60 py-1 hover:bg-[var(--node-hover)] touch:min-h-10',
+              r.onOpen && 'cursor-default',
+            )}
           >
             <span className="flex min-w-0 flex-col gap-1">
               <span className="flex min-w-0 items-center gap-2">
@@ -108,12 +127,13 @@ export function Table({ rows, total, nameLabel, noFiles }: { rows: Row[]; total:
             </span>
             {COLUMNS.map((c) =>
               c.id === 'files' && noFiles ? (
-                <span key={c.id} />
+                <span key={c.id} className="max-sm:hidden" />
               ) : (
                 <span
                   key={c.id}
                   className={cn(
                     'text-right tabular-nums',
+                    WIDE_ONLY(c.id),
                     c.id === sort.by ? 'text-[var(--node-fg)]' : 'text-[var(--node-muted)]',
                     c.id === 'code' && 'text-[var(--node-fg)]',
                   )}
