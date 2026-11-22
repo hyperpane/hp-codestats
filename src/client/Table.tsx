@@ -64,7 +64,7 @@ export function Table({ rows, total, nameLabel, noFiles }: { rows: Row[]; total:
       title={title}
       onClick={() => setSort((s) => ({ by: id, up: s.by === id ? !s.up : id === 'name' }))}
       className={cn(
-        'flex h-6 items-center gap-0.5 uppercase hover:text-[var(--node-fg)]',
+        'rounded-control flex h-7 items-center gap-0.5 transition-colors duration-100 hover:text-[var(--node-fg)] touch:h-9',
         end && 'justify-end',
         sort.by === id && 'text-[var(--node-fg)]',
         styles.focusRing,
@@ -76,25 +76,21 @@ export function Table({ rows, total, nameLabel, noFiles }: { rows: Row[]; total:
   );
 
   return (
-    <div className="sm:min-w-[38rem]">
-      <div
-        className={cn(
-          GRID,
-          styles.stickyTop,
-          'border-b border-[var(--node-border)] bg-[var(--node-bg)] text-[10.5px] font-medium tracking-wide text-[var(--node-muted)]',
-        )}
-      >
-        {head('name', nameLabel, undefined, false)}
-        {COLUMNS.map((c) =>
-          c.id === 'files' && noFiles ? (
-            <span key={c.id} className="max-sm:hidden" />
-          ) : (
-            <span key={c.id} className={cn(WIDE_ONLY(c.id))}>
-              {head(c.id, c.label, c.title)}
-            </span>
-          ),
-        )}
-        {head('code', 'Share', 'Share of the code')}
+    <div className="pb-1 sm:min-w-[38rem]">
+      <div className={cn(styles.stickyTop, 'mb-1 border-b border-[var(--node-border)] bg-[var(--node-bg)] px-1')}>
+        <div className={cn(GRID, 'text-xs font-medium text-[var(--node-muted)]')}>
+          {head('name', nameLabel, undefined, false)}
+          {COLUMNS.map((c) =>
+            c.id === 'files' && noFiles ? (
+              <span key={c.id} className="max-sm:hidden" />
+            ) : (
+              <span key={c.id} className={cn(WIDE_ONLY(c.id))}>
+                {head(c.id, c.label, c.title)}
+              </span>
+            ),
+          )}
+          {head('code', 'Share', 'Share of the code')}
+        </div>
       </div>
       {sorted.map((r) => {
         const share = total ? r.code / total : 0;
@@ -108,17 +104,17 @@ export function Table({ rows, total, nameLabel, noFiles }: { rows: Row[]; total:
             onClick={touch ? r.onOpen : undefined}
             className={cn(
               GRID,
-              'min-h-7 border-b border-[var(--node-border)]/60 py-1 hover:bg-[var(--node-hover)] touch:min-h-10',
+              'rounded-control mx-1 min-h-7 py-1.5 transition-colors duration-75 hover:bg-[var(--node-hover)] touch:min-h-10',
               r.onOpen && 'cursor-default',
             )}
           >
             <span className="flex min-w-0 flex-col gap-1">
               <span className="flex min-w-0 items-center gap-2">
-                {r.color && <span className="size-2.5 flex-none rounded-full" style={{ background: r.color }} />}
+                {r.color && <span className="size-2 flex-none rounded-full" style={{ background: r.color }} />}
                 <span className="min-w-0 truncate">{r.name}</span>
               </span>
               {r.parts && r.parts.length > 0 && (
-                <span className="flex h-1 overflow-hidden rounded-full bg-[var(--node-border)]">
+                <span className="flex h-1 gap-px overflow-hidden rounded-full bg-[var(--node-hover)]">
                   {r.parts.map((p, i) => (
                     <span key={i} title={p.title} style={{ width: `${p.share * 100}%`, background: p.color }} />
                   ))}
@@ -143,13 +139,13 @@ export function Table({ rows, total, nameLabel, noFiles }: { rows: Row[]; total:
               ),
             )}
             <span className="flex items-center gap-1.5">
-              <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--node-border)]">
+              <span className="h-1 flex-1 overflow-hidden rounded-full bg-[var(--node-hover)]">
                 <span
                   className="block h-full rounded-full"
                   style={{ width: `${Math.max(share * 100, share > 0 ? 2 : 0)}%`, background: r.color ?? 'var(--node-accent)' }}
                 />
               </span>
-              <span className="w-10 text-right text-[var(--node-muted)] tabular-nums">{percent(share)}</span>
+              <span className="text-2xs w-10 text-right text-[var(--node-muted)] tabular-nums">{percent(share)}</span>
             </span>
           </div>
         );

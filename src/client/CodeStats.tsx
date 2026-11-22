@@ -8,9 +8,9 @@
 // and the stats out, as JSON, each time a count ends.
 
 import { useEffect, useState } from 'react';
-import { FolderOpen, FolderRoot, Pencil, RefreshCw } from 'lucide-react';
+import { CircleAlert, FileQuestion, FolderOpen, FolderRoot, Pencil, RefreshCw } from 'lucide-react';
 import { basename, formatSize, useData, useHost, useProject } from '@hyperpane/sdk/client';
-import { NodeMessage, ToolButton, cn } from '@hyperpane/ui';
+import { Empty, NodeButton, Spinner, Tabs, Toolbar, ToolButton, cn } from '@hyperpane/ui';
 import { type CountEvent, type Stats, statsOut } from '../shared/index.ts';
 import { compact, duration, number, percent } from './format.ts';
 import { type Row, Table } from './Table.tsx';
@@ -71,7 +71,7 @@ export function CodeStats() {
     host.win.setTitle(name ? `Code Stats · ${name}` : 'Code Stats');
   }, [host, name]);
 
-  if (!project) return <NodeMessage>Open a project to count its code</NodeMessage>;
+  if (!project) return <Empty bordered={false} className="h-full" icon={<FolderOpen />} title="No project" description="Open a project to count its code." />;
 
   const folder = project.folder ?? null;
   const shownPath = stats?.root ?? at ?? folder ?? '';
@@ -88,12 +88,12 @@ export function CodeStats() {
 
   return (
     <div className="flex h-full flex-col text-xs text-[var(--node-fg)]">
-      <div className="flex items-center gap-1 border-b border-[var(--node-border)] px-2 py-1">
+      <Toolbar>
         <button
           type="button"
           onClick={() => void pick()}
           title={`${shownPath}\nClick to count another folder`}
-          className="group flex h-6 min-w-0 flex-1 items-center gap-1.5 rounded-[5px] px-1 text-left hover:bg-[var(--node-hover)] touch:h-9"
+          className="group rounded-control flex h-7 min-w-0 flex-1 items-center gap-2 px-2 text-left transition-colors duration-100 hover:bg-[var(--node-hover)] touch:h-9"
         >
           <FolderOpen className="size-3.5 flex-none text-[var(--node-muted)]" />
           <span className="min-w-0 truncate font-mono">
@@ -110,12 +110,27 @@ export function CodeStats() {
         </button>
         {at && <ToolButton label="Count the project’s folder" icon={FolderRoot} onClick={() => host.win.setData('path', null)} />}
         <ToolButton label="Count again" icon={RefreshCw} disabled={!!progress} onClick={() => setAgain((n) => n + 1)} />
-      </div>
+      </Toolbar>
       {progress && <Progress {...progress} />}
       {error ? (
-        <NodeMessage error>{error}</NodeMessage>
+        <Empty
+          bordered={false}
+          className="flex-1"
+          icon={<CircleAlert className="text-[var(--ansi-1)]" />}
+          title="Couldn’t count it"
+          description={error}
+          action={
+            <NodeButton onClick={() => setAgain((n) => n + 1)}>
+              <RefreshCw />
+              Try again
+            </NodeButton>
+          }
+        />
       ) : !stats ? (
-        <NodeMessage>Counting</NodeMessage>
+        <div className="flex flex-1 items-center justify-center gap-2 text-[var(--node-muted)]">
+          <Spinner size="xs" />
+          Counting
+        </div>
       ) : (
         <Body stats={stats} view={view} setView={setView} open={(p) => host.app.openFile(join(stats, p))} stale={!!progress} />
       )}
@@ -147,7 +162,13 @@ function Body({ stats, view, setView, open, stale }: { stats: Stats; view: View;
   if (!t.files) {
     return (
       <div className="flex flex-1 flex-col">
-        <NodeMessage>{stats.file ? 'This file is in no language it knows, or isn’t text' : 'No code here: no file in a language it knows'}</NodeMessage>
+        <Empty
+          bordered={false}
+          className="flex-1"
+          icon={<FileQuestion />}
+          title="No code here"
+          description={stats.file ? 'This file is in no language it knows, or isn’t text.' : 'No file here is in a language it knows.'}
+        />
         <Footer stats={stats} />
       </div>
     );
@@ -183,31 +204,28 @@ function Body({ stats, view, setView, open, stale }: { stats: Stats; view: View;
   return (
     <div className={cn('flex min-h-0 flex-1 flex-col transition-opacity', stale && 'opacity-60')}>
       {/* Narrow: files and lines on a line, the three kinds of line under them. */}
-      <div className="grid grid-cols-5 gap-px border-b border-[var(--node-border)] bg-[var(--node-border)] max-sm:grid-cols-6">
-        <Figure label="Files" value={t.files} className="max-sm:col-span-3" />
-        <Figure label="Lines" value={t.lines} detail={formatSize(t.bytes)} className="max-sm:col-span-3" />
-        <Figure label="Code" value={t.code} detail={percent(t.code / t.lines)} strong className="max-sm:col-span-2" />
-        <Figure label="Comments" value={t.comments} detail={percent(t.comments / t.lines)} className="max-sm:col-span-2" />
-        <Figure label="Blank" value={t.blanks} detail={percent(t.blanks / t.lines)} className="max-sm:col-span-2" />
+      <div className="flex flex-none flex-col gap-3 border-b border-[var(--node-border)] p-3">
+        <div className="grid grid-cols-5 gap-x-4 gap-y-3 max-sm:grid-cols-6">
+          <Figure label="Files" value={t.files} className="max-sm:col-span-3" />
+          <Figure label="Lines" value={t.lines} detail={formatSize(t.bytes)} className="max-sm:col-span-3" />
+          <Figure label="Code" value={t.code} detail={percent(t.code / t.lines)} strong className="max-sm:col-span-2" />
+          <Figure label="Comments" value={t.comments} detail={percent(t.comments / t.lines)} className="max-sm:col-span-2" />
+          <Figure label="Blank" value={t.blanks} detail={percent(t.blanks / t.lines)} className="max-sm:col-span-2" />
+        </div>
+        <Languages stats={stats} />
       </div>
-      <Languages stats={stats} />
-      <div className="flex items-center gap-1 border-b border-[var(--node-border)] px-2 py-1">
-        {(['languages', 'folders', 'files'] as const).map((v) => (
-          <button
-            key={v}
-            type="button"
-            aria-pressed={view === v}
-            disabled={stats.file && v !== 'languages'}
-            onClick={() => setView(v)}
-            className={cn(
-              'h-6 rounded-[5px] px-2 font-medium disabled:opacity-40 touch:h-9',
-              view === v ? 'bg-[var(--node-hover)] text-[var(--node-fg)]' : 'text-[var(--node-muted)] enabled:hover:text-[var(--node-fg)]',
-            )}
-          >
-            {v === 'languages' ? `Languages ${stats.languages.length}` : v === 'folders' ? `Folders ${stats.folders.length}` : 'Longest files'}
-          </button>
-        ))}
-      </div>
+      {/* The table's head draws the line under these. */}
+      <Tabs
+        label="Count by"
+        value={view}
+        onValueChange={setView}
+        className="border-b-0 px-2"
+        items={[
+          { value: 'languages', label: 'Languages', count: stats.languages.length },
+          { value: 'folders', label: 'Folders', count: stats.folders.length, disabled: stats.file },
+          { value: 'files', label: 'Longest files', disabled: stats.file },
+        ]}
+      />
       <div className="min-h-0 flex-1 overflow-auto [scrollbar-gutter:stable]">
         <Table
           key={view}
@@ -224,11 +242,11 @@ function Body({ stats, view, setView, open, stale }: { stats: Stats; view: View;
 
 function Figure({ label, value, detail, strong, className }: { label: string; value: number; detail?: string; strong?: boolean; className?: string }) {
   return (
-    <div className={cn('flex min-w-0 flex-col gap-0.5 bg-[var(--node-bg)] px-2.5 py-2', className)} title={`${number(value)} ${label.toLowerCase()}`}>
-      <span className="text-[10.5px] font-medium tracking-wide text-[var(--node-muted)] uppercase">{label}</span>
+    <div className={cn('flex min-w-0 flex-col gap-1', className)} title={`${number(value)} ${label.toLowerCase()}`}>
+      <span className="text-2xs font-medium text-[var(--node-muted)]">{label}</span>
       <span className="flex items-baseline gap-1.5">
-        <span className={cn('truncate text-base tabular-nums', strong ? 'font-semibold' : 'font-medium')}>{compact(value)}</span>
-        {detail && <span className="truncate text-[var(--node-muted)] tabular-nums">{detail}</span>}
+        <span className={cn('truncate text-lg tracking-tight tabular-nums', strong ? 'font-semibold' : 'font-medium')}>{compact(value)}</span>
+        {detail && <span className="text-2xs truncate text-[var(--node-muted)] tabular-nums">{detail}</span>}
       </span>
     </div>
   );
@@ -241,8 +259,8 @@ function Languages({ stats }: { stats: Stats }) {
   const named = stats.languages.filter((l) => l.code / total >= 0.01).slice(0, 8);
   const rest = stats.languages.length - named.length;
   return (
-    <div className="flex flex-col gap-1.5 border-b border-[var(--node-border)] px-2.5 py-2">
-      <div className="flex h-2 gap-px overflow-hidden rounded-full bg-[var(--node-border)]">
+    <div className="flex flex-col gap-2">
+      <div className="flex h-1.5 gap-px overflow-hidden rounded-full bg-[var(--node-hover)]">
         {stats.languages.map((l) => (
           <span
             key={l.name}
@@ -251,10 +269,10 @@ function Languages({ stats }: { stats: Stats }) {
           />
         ))}
       </div>
-      <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[var(--node-muted)]">
+      <div className="text-2xs flex flex-wrap gap-x-3 gap-y-1 text-[var(--node-muted)]">
         {named.map((l) => (
           <span key={l.name} className="flex items-center gap-1.5">
-            <span className="size-2 rounded-full" style={{ background: l.color }} />
+            <span className="size-1.5 rounded-full" style={{ background: l.color }} />
             <span className="text-[var(--node-fg)]">{l.name}</span>
             <span className="tabular-nums">{percent(l.code / total)}</span>
           </span>
@@ -274,7 +292,7 @@ function Footer({ stats }: { stats: Stats }) {
     s.other && `${number(s.other)} in no language it knows (${s.otherKinds.map((k) => (k.ext ? `.${k.ext}` : 'no extension')).join(', ')})`,
   ].filter(Boolean);
   return (
-    <div className="flex flex-wrap gap-x-1 border-t border-[var(--node-border)] px-2.5 py-1.5 text-[var(--node-muted)]">
+    <div className="text-2xs flex flex-none flex-wrap gap-x-1 border-t border-[var(--node-border)] px-3 py-2 text-[var(--node-muted)]">
       <span>
         {stats.git ? 'The files git has and doesn’t ignore' : stats.file ? 'One file' : 'Every file but in node_modules, build output and the like'}, counted in{' '}
         {duration(stats.took)}.
