@@ -3,7 +3,7 @@
 // as a bar. A narrow window keeps the name, the code and the share.
 
 import { useState } from 'react';
-import { ArrowDown, ArrowUp } from 'lucide-react';
+import { ArrowDown, ArrowUp } from '@hyperpane/icons';
 import { cn, styles, useTouch } from '@hyperpane/ui';
 import { formatSize } from '@hyperpane/sdk/client';
 import { number, percent } from './format.ts';
@@ -37,7 +37,7 @@ export interface Row {
 }
 
 const GRID =
-  'grid grid-cols-[minmax(8rem,1fr)_repeat(6,minmax(3.5rem,auto))_6.5rem] items-center gap-x-3 px-2 max-sm:grid-cols-[minmax(0,1fr)_minmax(3.5rem,auto)_6.5rem]';
+  'grid grid-cols-[minmax(8rem,1fr)_repeat(6,minmax(3.5rem,auto))_7rem] items-center gap-x-4 px-2.5 max-sm:grid-cols-[minmax(0,1fr)_minmax(3.5rem,auto)_6.5rem] max-sm:gap-x-3';
 /** A column a narrow window does without. */
 const WIDE_ONLY = (id: string) => id !== 'code' && 'max-sm:hidden';
 
@@ -58,26 +58,26 @@ export function Table({ rows, total, nameLabel, noFiles }: { rows: Row[]; total:
     const d = col ? col.value(a) - col.value(b) : a.sortName.localeCompare(b.sortName);
     return (sort.up ? d : -d) || a.sortName.localeCompare(b.sortName);
   });
-  const head = (id: string, label: string, title?: string, end = true) => (
+  const head = (id: string, label: string, title?: string, end = true, marked = true) => (
     <button
       type="button"
       title={title}
       onClick={() => setSort((s) => ({ by: id, up: s.by === id ? !s.up : id === 'name' }))}
       className={cn(
-        'rounded-control flex h-7 items-center gap-0.5 transition-colors duration-100 hover:text-[var(--node-fg)] touch:h-9',
+        'rounded-control flex h-8 items-center gap-1 transition-colors duration-100 hover:text-[var(--node-fg)] touch:h-10',
         end && 'justify-end',
-        sort.by === id && 'text-[var(--node-fg)]',
+        marked && sort.by === id && 'text-[var(--node-fg)]',
         styles.focusRing,
       )}
     >
       {label}
-      {sort.by === id && (sort.up ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />)}
+      {marked && sort.by === id && (sort.up ? <ArrowUp className="size-3.5" /> : <ArrowDown className="size-3.5" />)}
     </button>
   );
 
   return (
-    <div className="pb-1 sm:min-w-[38rem]">
-      <div className={cn(styles.stickyTop, 'mb-1 border-b border-[var(--node-border)] bg-[var(--node-bg)] px-1')}>
+    <div className="pb-1.5 sm:min-w-[40rem]">
+      <div className={cn(styles.stickyTop, 'mb-1 border-b border-[var(--hairline)] bg-[var(--node-bg)] px-1.5')}>
         <div className={cn(GRID, 'text-xs font-medium text-[var(--node-muted)]')}>
           {head('name', nameLabel, undefined, false)}
           {COLUMNS.map((c) =>
@@ -89,7 +89,8 @@ export function Table({ rows, total, nameLabel, noFiles }: { rows: Row[]; total:
               </span>
             ),
           )}
-          {head('code', 'Share', 'Share of the code')}
+          {/* Sorts as Code does; the arrow stays on Code. */}
+          {head('code', 'Share', 'Share of the code', true, false)}
         </div>
       </div>
       {sorted.map((r) => {
@@ -104,17 +105,17 @@ export function Table({ rows, total, nameLabel, noFiles }: { rows: Row[]; total:
             onClick={touch ? r.onOpen : undefined}
             className={cn(
               GRID,
-              'rounded-control mx-1 min-h-7 py-1.5 transition-colors duration-75 hover:bg-[var(--node-hover)] touch:min-h-10',
+              'rounded-control mx-1.5 min-h-8 py-1.5 transition-colors duration-100 hover:bg-[var(--node-hover)] touch:min-h-11',
               r.onOpen && 'cursor-default',
             )}
           >
             <span className="flex min-w-0 flex-col gap-1">
               <span className="flex min-w-0 items-center gap-2">
-                {r.color && <span className="size-2 flex-none rounded-full" style={{ background: r.color }} />}
+                {r.color && <span className="size-2.5 flex-none rounded-full" style={{ background: r.color }} />}
                 <span className="min-w-0 truncate">{r.name}</span>
               </span>
               {r.parts && r.parts.length > 0 && (
-                <span className="flex h-1 gap-px overflow-hidden rounded-full bg-[var(--node-hover)]">
+                <span className="flex h-1 gap-0.5 overflow-hidden rounded-full bg-[var(--node-hover)]">
                   {r.parts.map((p, i) => (
                     <span key={i} title={p.title} style={{ width: `${p.share * 100}%`, background: p.color }} />
                   ))}
@@ -138,14 +139,14 @@ export function Table({ rows, total, nameLabel, noFiles }: { rows: Row[]; total:
                 </span>
               ),
             )}
-            <span className="flex items-center gap-1.5">
-              <span className="h-1 flex-1 overflow-hidden rounded-full bg-[var(--node-hover)]">
+            <span className="flex items-center gap-2">
+              <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--node-hover)]">
                 <span
                   className="block h-full rounded-full"
                   style={{ width: `${Math.max(share * 100, share > 0 ? 2 : 0)}%`, background: r.color ?? 'var(--node-accent)' }}
                 />
               </span>
-              <span className="text-2xs w-10 text-right text-[var(--node-muted)] tabular-nums">{percent(share)}</span>
+              <span className="w-10 text-right text-xs text-[var(--node-muted)] tabular-nums">{percent(share)}</span>
             </span>
           </div>
         );

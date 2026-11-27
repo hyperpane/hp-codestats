@@ -8,12 +8,13 @@
 // and the stats out, as JSON, each time a count ends.
 
 import { useEffect, useState } from 'react';
-import { CircleAlert, FileQuestion, FolderOpen, FolderRoot, Pencil, RefreshCw } from 'lucide-react';
+import { CircleAlert, FileQuestion, FolderOpen, FolderRoot, Pencil, RefreshCw } from '@hyperpane/icons';
 import { basename, formatSize, useData, useHost, useProject } from '@hyperpane/sdk/client';
-import { Empty, NodeButton, Spinner, Tabs, Toolbar, ToolButton, cn } from '@hyperpane/ui';
+import { Button, Empty, HeaderBar, Progress as KitProgress, SegmentedControl, Spinner, ToolButton, cn } from '@hyperpane/ui';
 import { type CountEvent, type Stats, statsOut } from '../shared/index.ts';
 import { compact, duration, number, percent } from './format.ts';
 import { type Row, Table } from './Table.tsx';
+import { ACCENT } from './accent.ts';
 
 const ID = 'codestats';
 type View = 'languages' | 'folders' | 'files';
@@ -71,7 +72,7 @@ export function CodeStats() {
     host.win.setTitle(name ? `Code Stats · ${name}` : 'Code Stats');
   }, [host, name]);
 
-  if (!project) return <Empty bordered={false} className="h-full" icon={<FolderOpen />} title="No project" description="Open a project to count its code." />;
+  if (!project) return <Empty size="compact" className="h-full" icon={<FolderOpen />} title="No project" description="Open a project to count its code." />;
 
   const folder = project.folder ?? null;
   const shownPath = stats?.root ?? at ?? folder ?? '';
@@ -87,49 +88,51 @@ export function CodeStats() {
   };
 
   return (
-    <div className="flex h-full flex-col text-xs text-[var(--node-fg)]">
-      <Toolbar>
+    <div className="flex h-full flex-col text-[13px] leading-5 text-[var(--node-fg)]" style={ACCENT}>
+      {/* The one bar: what's counted (a click counts another), then the tools. */}
+      <HeaderBar className="relative gap-1 px-2">
         <button
           type="button"
           onClick={() => void pick()}
           title={`${shownPath}\nClick to count another folder`}
-          className="group rounded-control flex h-7 min-w-0 flex-1 items-center gap-2 px-2 text-left transition-colors duration-100 hover:bg-[var(--node-hover)] touch:h-9"
+          className="group rounded-control flex h-7 min-w-0 items-center gap-2 px-2 text-left transition-colors duration-100 hover:bg-[var(--node-hover)] touch:h-9"
         >
-          <FolderOpen className="size-3.5 flex-none text-[var(--node-muted)]" />
-          <span className="min-w-0 truncate font-mono">
+          <FolderOpen className="size-4 flex-none text-[var(--node-muted)]" />
+          <span className="min-w-0 truncate">
             {inProject === null ? (
-              shownPath
+              <span className="font-mono text-xs">{shownPath}</span>
             ) : (
               <>
-                <span className="text-[var(--node-muted)]">{project.name}</span>
-                {inProject && <span>/{inProject}</span>}
+                <span className="font-medium">{project.name}</span>
+                {inProject && <span className="font-mono text-xs text-[var(--node-muted)]"> / {inProject}</span>}
               </>
             )}
           </span>
-          <Pencil className="size-3 flex-none text-[var(--node-muted)] opacity-0 group-hover:opacity-100 touch:opacity-100" />
+          <Pencil className="size-3.5 flex-none text-[var(--node-muted)] opacity-0 transition-opacity duration-100 group-hover:opacity-100 touch:opacity-100" />
         </button>
+        <span className="flex-1" />
         {at && <ToolButton label="Count the project’s folder" icon={FolderRoot} onClick={() => host.win.setData('path', null)} />}
         <ToolButton label="Count again" icon={RefreshCw} disabled={!!progress} onClick={() => setAgain((n) => n + 1)} />
-      </Toolbar>
-      {progress && <Progress {...progress} />}
+        {progress && <Progress {...progress} />}
+      </HeaderBar>
       {error ? (
         <Empty
-          bordered={false}
+          size="compact"
           className="flex-1"
-          icon={<CircleAlert className="text-[var(--ansi-1)]" />}
+          icon={<CircleAlert className="text-[var(--destructive-soft-foreground)]" />}
           title="Couldn’t count it"
           description={error}
           action={
-            <NodeButton onClick={() => setAgain((n) => n + 1)}>
-              <RefreshCw />
+            <Button size="sm" variant="secondary" onClick={() => setAgain((n) => n + 1)}>
+              <RefreshCw className="size-3.5" />
               Try again
-            </NodeButton>
+            </Button>
           }
         />
       ) : !stats ? (
         <div className="flex flex-1 items-center justify-center gap-2 text-[var(--node-muted)]">
-          <Spinner size="xs" />
-          Counting
+          <Spinner size="sm" />
+          Counting{progress?.total ? ` ${number(progress.done)} of ${number(progress.total)} files` : ''}
         </div>
       ) : (
         <Body stats={stats} view={view} setView={setView} open={(p) => host.app.openFile(join(stats, p))} stale={!!progress} />
@@ -145,13 +148,15 @@ function join(s: Stats, rel: string) {
   return s.root.replace(/[\\/]+$/, '') + sep + rel.split('/').join(sep);
 }
 
+/** A thin line over the bar's bottom edge while it counts. */
 function Progress({ done, total }: { done: number; total: number }) {
   return (
-    <div className="h-0.5 overflow-hidden bg-[var(--node-border)]" title={total ? `${number(done)} of ${number(total)} files` : 'Listing the files'}>
-      <div
-        className={cn('h-full bg-[var(--node-accent)] transition-[width] duration-150', !total && 'w-1/4 animate-pulse')}
-        style={total ? { width: `${(done / total) * 100}%` } : undefined}
-      />
+    <div className="pointer-events-none absolute inset-x-0 -bottom-px h-0.5" title={total ? `${number(done)} of ${number(total)} files` : 'Listing the files'}>
+      {total ? (
+        <KitProgress value={(done / total) * 100} size="xs" label="Counting" className="rounded-none bg-transparent" />
+      ) : (
+        <div className="h-full w-1/4 animate-pulse bg-[var(--node-accent)]" />
+      )}
     </div>
   );
 }
@@ -163,7 +168,7 @@ function Body({ stats, view, setView, open, stale }: { stats: Stats; view: View;
     return (
       <div className="flex flex-1 flex-col">
         <Empty
-          bordered={false}
+          size="compact"
           className="flex-1"
           icon={<FileQuestion />}
           title="No code here"
@@ -204,8 +209,8 @@ function Body({ stats, view, setView, open, stale }: { stats: Stats; view: View;
   return (
     <div className={cn('flex min-h-0 flex-1 flex-col transition-opacity', stale && 'opacity-60')}>
       {/* Narrow: files and lines on a line, the three kinds of line under them. */}
-      <div className="flex flex-none flex-col gap-3 border-b border-[var(--node-border)] p-3">
-        <div className="grid grid-cols-5 gap-x-4 gap-y-3 max-sm:grid-cols-6">
+      <div className="flex flex-none flex-col gap-4 px-4 pt-4 pb-3">
+        <div className="grid grid-cols-5 gap-x-4 gap-y-4 max-sm:grid-cols-6">
           <Figure label="Files" value={t.files} className="max-sm:col-span-3" />
           <Figure label="Lines" value={t.lines} detail={formatSize(t.bytes)} className="max-sm:col-span-3" />
           <Figure label="Code" value={t.code} detail={percent(t.code / t.lines)} strong className="max-sm:col-span-2" />
@@ -214,18 +219,20 @@ function Body({ stats, view, setView, open, stale }: { stats: Stats; view: View;
         </div>
         <Languages stats={stats} />
       </div>
-      {/* The table's head draws the line under these. */}
-      <Tabs
-        label="Count by"
-        value={view}
-        onValueChange={setView}
-        className="border-b-0 px-2"
-        items={[
-          { value: 'languages', label: 'Languages', count: stats.languages.length },
-          { value: 'folders', label: 'Folders', count: stats.folders.length, disabled: stats.file },
-          { value: 'files', label: 'Longest files', disabled: stats.file },
-        ]}
-      />
+      {/* How the table counts; its head draws the line under this. */}
+      <div className="flex h-11 flex-none items-center px-3 touch:h-12">
+        <SegmentedControl
+          size="sm"
+          label="Count by"
+          value={view}
+          onValueChange={(v: string) => setView(v as View)}
+          options={[
+            { value: 'languages', label: <Seg name="Languages" count={stats.languages.length} />, srLabel: 'Languages' },
+            { value: 'folders', label: <Seg name="Folders" count={stats.folders.length} />, srLabel: 'Folders', disabled: stats.file },
+            { value: 'files', label: <Seg name="Longest files" />, srLabel: 'Longest files', disabled: stats.file },
+          ]}
+        />
+      </div>
       <div className="min-h-0 flex-1 overflow-auto [scrollbar-gutter:stable]">
         <Table
           key={view}
@@ -240,13 +247,23 @@ function Body({ stats, view, setView, open, stale }: { stats: Stats; view: View;
   );
 }
 
+/** A segment's name and its count, muted. */
+function Seg({ name, count }: { name: string; count?: number }) {
+  return (
+    <span className="flex items-center gap-1.5 px-1">
+      {name}
+      {count !== undefined && <span className="text-xs text-[var(--node-muted)] tabular-nums">{number(count)}</span>}
+    </span>
+  );
+}
+
 function Figure({ label, value, detail, strong, className }: { label: string; value: number; detail?: string; strong?: boolean; className?: string }) {
   return (
-    <div className={cn('flex min-w-0 flex-col gap-1', className)} title={`${number(value)} ${label.toLowerCase()}`}>
-      <span className="text-2xs font-medium text-[var(--node-muted)]">{label}</span>
+    <div className={cn('flex min-w-0 flex-col gap-0.5', className)} title={`${number(value)} ${label.toLowerCase()}`}>
+      <span className="text-xs text-[var(--node-muted)]">{label}</span>
       <span className="flex items-baseline gap-1.5">
-        <span className={cn('truncate text-lg tracking-tight tabular-nums', strong ? 'font-semibold' : 'font-medium')}>{compact(value)}</span>
-        {detail && <span className="text-2xs truncate text-[var(--node-muted)] tabular-nums">{detail}</span>}
+        <span className={cn('truncate text-[22px] leading-7 tracking-[-0.01em] tabular-nums', strong ? 'font-semibold' : 'font-medium')}>{compact(value)}</span>
+        {detail && <span className="truncate text-xs text-[var(--node-muted)] tabular-nums">{detail}</span>}
       </span>
     </div>
   );
@@ -259,8 +276,8 @@ function Languages({ stats }: { stats: Stats }) {
   const named = stats.languages.filter((l) => l.code / total >= 0.01).slice(0, 8);
   const rest = stats.languages.length - named.length;
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex h-1.5 gap-px overflow-hidden rounded-full bg-[var(--node-hover)]">
+    <div className="flex flex-col gap-2.5">
+      <div className="flex h-2 gap-0.5 overflow-hidden rounded-full bg-[var(--node-hover)]">
         {stats.languages.map((l) => (
           <span
             key={l.name}
@@ -269,10 +286,10 @@ function Languages({ stats }: { stats: Stats }) {
           />
         ))}
       </div>
-      <div className="text-2xs flex flex-wrap gap-x-3 gap-y-1 text-[var(--node-muted)]">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--node-muted)]">
         {named.map((l) => (
           <span key={l.name} className="flex items-center gap-1.5">
-            <span className="size-1.5 rounded-full" style={{ background: l.color }} />
+            <span className="size-2 rounded-full" style={{ background: l.color }} />
             <span className="text-[var(--node-fg)]">{l.name}</span>
             <span className="tabular-nums">{percent(l.code / total)}</span>
           </span>
@@ -292,13 +309,13 @@ function Footer({ stats }: { stats: Stats }) {
     s.other && `${number(s.other)} in no language it knows (${s.otherKinds.map((k) => (k.ext ? `.${k.ext}` : 'no extension')).join(', ')})`,
   ].filter(Boolean);
   return (
-    <div className="text-2xs flex flex-none flex-wrap gap-x-1 border-t border-[var(--node-border)] px-3 py-2 text-[var(--node-muted)]">
+    <div className="flex min-h-8 flex-none flex-wrap items-center gap-x-1 border-t border-[var(--hairline)] px-4 py-1.5 text-xs text-[var(--node-muted)]">
       <span>
         {stats.git ? 'The files git has and doesn’t ignore' : stats.file ? 'One file' : 'Every file but in node_modules, build output and the like'}, counted in{' '}
         {duration(stats.took)}.
       </span>
       {stats.truncated && (
-        <span className="text-[var(--ansi-3)]">It stopped at {number(stats.totals.files + s.binary + s.large + s.generated + s.other)} files.</span>
+        <span className="text-[var(--amber-soft-foreground)]">It stopped at {number(stats.totals.files + s.binary + s.large + s.generated + s.other)} files.</span>
       )}
       {not.length > 0 && <span>Not counted: {not.join(', ')}.</span>}
     </div>

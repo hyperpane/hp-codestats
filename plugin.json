@@ -2,7 +2,7 @@
   "manifest": 1,
   "id": "codestats",
   "name": "Code Stats",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "hyperpane",
   "description": "Your code counted: lines of code, comments and blank lines in every language, by folder, and the longest files. Link a folder to its port to count that one.",
   "icon": "icon.svg",
