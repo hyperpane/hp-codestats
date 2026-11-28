@@ -58,13 +58,14 @@ export function Table({ rows, total, nameLabel, noFiles }: { rows: Row[]; total:
     const d = col ? col.value(a) - col.value(b) : a.sortName.localeCompare(b.sortName);
     return (sort.up ? d : -d) || a.sortName.localeCompare(b.sortName);
   });
+  // A head as wide as its column, so a number's head ends where its numbers do.
   const head = (id: string, label: string, title?: string, end = true, marked = true) => (
     <button
       type="button"
       title={title}
       onClick={() => setSort((s) => ({ by: id, up: s.by === id ? !s.up : id === 'name' }))}
       className={cn(
-        'rounded-control flex h-8 items-center gap-1 transition-colors duration-100 hover:text-[var(--node-fg)] touch:h-10',
+        'flex h-8 w-full items-center gap-1 rounded-full transition-colors duration-100 hover:text-[var(--node-fg)] touch:h-10',
         end && 'justify-end',
         marked && sort.by === id && 'text-[var(--node-fg)]',
         styles.focusRing,

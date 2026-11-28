@@ -95,7 +95,7 @@ export function CodeStats() {
           type="button"
           onClick={() => void pick()}
           title={`${shownPath}\nClick to count another folder`}
-          className="group rounded-control flex h-7 min-w-0 items-center gap-2 px-2 text-left transition-colors duration-100 hover:bg-[var(--node-hover)] touch:h-9"
+          className="group flex h-7 rounded-full min-w-0 items-center gap-2 px-2 text-left transition-colors duration-100 hover:bg-[var(--node-hover)] touch:h-9"
         >
           <FolderOpen className="size-4 flex-none text-[var(--node-muted)]" />
           <span className="min-w-0 truncate">
@@ -220,7 +220,7 @@ function Body({ stats, view, setView, open, stale }: { stats: Stats; view: View;
         <Languages stats={stats} />
       </div>
       {/* How the table counts; its head draws the line under this. */}
-      <div className="flex h-11 flex-none items-center px-3 touch:h-12">
+      <div className="flex h-11 flex-none items-center px-4 touch:h-12">
         <SegmentedControl
           size="sm"
           label="Count by"
